@@ -59,12 +59,12 @@ debug:
 # Release build
 .PHONY: release
 release:
-	goreleaser release --rm-dist
+	goreleaser release --clean
 
 # Development release
 .PHONY: dev-release
 dev-release:
-	goreleaser release --snapshot --rm-dist
+	goreleaser release --snapshot --clean
 
 .PHONY: help
 help:

@@ -9,11 +9,11 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
-    mod_timestamp: '{{ .CommitTimestamp }}'
+    mod_timestamp: "{{ .CommitTimestamp }}"
     flags:
       - -trimpath
     ldflags:
-      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
+      - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}"
     goos:
       - freebsd
       - windows
@@ -21,23 +21,23 @@ builds:
       - darwin
     goarch:
       - amd64
-      - '386'
+      - "386"
       - arm
       - arm64
     ignore:
       - goos: darwin
-        goarch: '386'
-    binary: '{{ .ProjectName }}_v{{ .Version }}'
+        goarch: "386"
+    binary: "{{ .ProjectName }}_v{{ .Version }}"
 
 archives:
   - format: zip
-    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   extra_files:
-    - glob: 'terraform-registry-manifest.json'
-      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
-  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+    - glob: "terraform-registry-manifest.json"
+      name_template: "{{ .ProjectName }}_{{ .Version }}_manifest.json"
+  name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
   algorithm: sha256
 
 signs:
@@ -55,14 +55,13 @@ signs:
 
 release:
   extra_files:
-    - glob: 'terraform-registry-manifest.json'
-      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+    - glob: "terraform-registry-manifest.json"
+      name_template: "{{ .ProjectName }}_{{ .Version }}_manifest.json"
   # If you want to manually examine the release before its live, uncomment this line:
   # draft: true
 
 changelog:
-  skip: true
-
+  disable: true
 # modelines, feel free to remove those if you don't want/use them:
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
