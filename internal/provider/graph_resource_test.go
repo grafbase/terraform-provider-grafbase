@@ -154,35 +154,6 @@ resource "grafbase_graph" "test" {
 
 // Additional test configurations for different scenarios
 
-func testAccGraphResourceConfigWithVariables() string {
-	return `
-variable "account_slug" {
-  description = "Account slug for testing"
-  type        = string
-  default     = "test-account"
-}
-
-variable "graph_slug" {
-  description = "Graph slug for testing"
-  type        = string
-  default     = "test-graph"
-}
-
-resource "grafbase_graph" "test" {
-  account_slug = var.account_slug
-  slug         = var.graph_slug
-}
-
-output "graph_id" {
-  value = grafbase_graph.test.id
-}
-
-output "graph_created_at" {
-  value = grafbase_graph.test.created_at
-}
-`
-}
-
 func testAccGraphResourceConfigMultiple() string {
 	return `
 resource "grafbase_graph" "test1" {
