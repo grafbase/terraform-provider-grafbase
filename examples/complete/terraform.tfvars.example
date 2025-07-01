@@ -1,0 +1,16 @@
+# Example Terraform variables file for the complete example
+# Copy this file to terraform.tfvars and fill in your actual values
+
+# Grafbase API key for authentication
+# You can get this from the Grafbase Dashboard at https://app.grafbase.com/
+# Alternatively, set the GRAFBASE_API_KEY environment variable
+grafbase_api_key = "your-grafbase-api-key-here"
+
+# Your Grafbase account slug
+# This is the slug that appears in your Grafbase URLs
+# Example: if your Grafbase URL is https://grafbase.com/mycompany, then your account_slug is "mycompany"
+account_slug = "your-account-slug"
+
+# Environment name - this will be used as a suffix for graph names
+# Common values: "dev", "staging", "prod", "test"
+environment = "dev"

@@ -1,0 +1,14 @@
+# Example Terraform variables file
+# Copy this file to terraform.tfvars and fill in your actual values
+
+# Grafbase API key for authentication
+# You can get this from the Grafbase Dashboard
+grafbase_api_key = "your-grafbase-api-key-here"
+
+# Your Grafbase account slug
+# This is the slug that appears in your Grafbase URLs
+account_slug = "your-account-slug"
+
+# The slug for your graph
+# This will be the name of your graph in Grafbase
+graph_slug = "my-example-graph"
