@@ -30,6 +30,10 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.5.7"
+          terraform_wrapper: false
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6.0.0
         with:
