@@ -29,16 +29,15 @@ jobs:
           terraform_version: "1.5.7"
           terraform_wrapper: false
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6.1.0
+        uses: crazy-max/ghaction-import-gpg@v6.3.0
         id: import_gpg
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6.0.0
+        uses: goreleaser/goreleaser-action@v6.3.0
         with:
           args: release --clean
         env:
-          # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
