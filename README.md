@@ -35,8 +35,9 @@ provider "grafbase" {
 export GRAFBASE_API_KEY="your-grafbase-api-key"
 ```
 
-### 3. Create a Graph
+### 3. Create Resources
 
+**Basic Graph:**
 ```hcl
 resource "grafbase_graph" "example" {
   account_slug = "my-account"
@@ -45,6 +46,39 @@ resource "grafbase_graph" "example" {
 
 output "graph_id" {
   value = grafbase_graph.example.id
+}
+```
+
+**Complete Federated Setup:**
+```hcl
+# Graph
+resource "grafbase_graph" "api" {
+  account_slug = "my-account"
+  slug         = "my-api"
+}
+
+# Branch
+resource "grafbase_branch" "main" {
+  graph_id = grafbase_graph.api.id
+  name     = "main"
+}
+
+# Subgraphs
+resource "grafbase_subgraph" "users" {
+  branch_id = grafbase_branch.main.id
+  name      = "users"
+  url       = "https://users.api.example.com/graphql"
+}
+
+# Outputs
+output "api_endpoints" {
+  value = {
+    graph_id   = grafbase_graph.api.id
+    branch_id  = grafbase_branch.main.id
+    subgraphs = {
+      users = grafbase_subgraph.users.url
+    }
+  }
 }
 ```
 
@@ -124,6 +158,26 @@ variable "grafbase_api_key" {
 
 ## Resources
 
+The Grafbase provider supports three main resource types that work together to create federated GraphQL APIs:
+
+1. **`grafbase_graph`** - Manages graphs (top-level containers)
+2. **`grafbase_branch`** - Manages branches within graphs (like Git branches)
+3. **`grafbase_subgraph`** - Manages subgraphs within branches (individual GraphQL services)
+
+### Resource Hierarchy
+
+```
+Graph
+├── Branch (main)
+│   ├── Subgraph (users)
+│   ├── Subgraph (products)
+│   └── Subgraph (orders)
+└── Branch (develop)
+    ├── Subgraph (users)
+    ├── Subgraph (products)
+    └── Subgraph (orders)
+```
+
 ### `grafbase_graph`
 
 The `grafbase_graph` resource allows you to manage graphs. Graphs are the fundamental units in Grafbase that contain your GraphQL schema and configuration.
@@ -186,13 +240,185 @@ terraform import grafbase_graph.my_graph my-account/my-graph
 - **Naming**: Follow Grafbase naming conventions for slugs (lowercase, alphanumeric, hyphens allowed).
 - **Permissions**: You must have appropriate permissions in the specified account to create graphs.
 
+### `grafbase_branch`
+
+The `grafbase_branch` resource allows you to manage branches within graphs. Branches provide isolated environments for your GraphQL federation, similar to Git branches.
+
+#### Example Usage
+
+**Basic Usage:**
+```hcl
+resource "grafbase_graph" "example" {
+  account_slug = "my-account"
+  slug         = "my-graph"
+}
+
+resource "grafbase_branch" "main" {
+  graph_id = grafbase_graph.example.id
+  name     = "main"
+}
+
+resource "grafbase_branch" "develop" {
+  graph_id = grafbase_graph.example.id
+  name     = "develop"
+}
+```
+
+#### Argument Reference
+
+The following arguments are supported:
+
+- `graph_id` (Required, String) - The ID of the graph where the branch will be created. Changing this attribute forces replacement of the resource.
+
+- `name` (Required, String) - The name of the branch. Must be unique within the graph and follow naming conventions. Common names include "main", "develop", "staging", etc. Changing this attribute forces replacement of the resource.
+
+#### Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+- `id` (String) - The unique identifier of the branch assigned by Grafbase.
+- `created_at` (String) - The RFC3339 timestamp when the branch was created.
+
+#### Import
+
+Existing branches can be imported using the format `graph_id/branch_name`:
+
+```bash
+terraform import grafbase_branch.main abcd1234-5678-90ef-ghij-klmnopqrstuv/main
+```
+
+#### Notes
+
+- **Immutability**: Both `graph_id` and `name` are immutable after creation. Changing either will destroy and recreate the branch.
+- **Uniqueness**: Branch names must be unique within a graph.
+- **Dependencies**: A graph must exist before creating branches.
+
+### `grafbase_subgraph`
+
+The `grafbase_subgraph` resource allows you to manage subgraphs within branches. Subgraphs are individual GraphQL services that compose into your federated graph.
+
+#### Example Usage
+
+**Basic Usage:**
+```hcl
+resource "grafbase_graph" "example" {
+  account_slug = "my-account"
+  slug         = "my-graph"
+}
+
+resource "grafbase_branch" "main" {
+  graph_id = grafbase_graph.example.id
+  name     = "main"
+}
+
+resource "grafbase_subgraph" "users" {
+  branch_id = grafbase_branch.main.id
+  name      = "users"
+  url       = "https://users.api.example.com/graphql"
+}
+
+resource "grafbase_subgraph" "products" {
+  branch_id = grafbase_branch.main.id
+  name      = "products"
+  url       = "https://products.api.example.com/graphql"
+}
+```
+
+**Multiple Environments:**
+```hcl
+# Main branch subgraphs
+resource "grafbase_subgraph" "users_main" {
+  branch_id = grafbase_branch.main.id
+  name      = "users"
+  url       = "https://users.api.example.com/graphql"
+}
+
+# Development branch subgraphs
+resource "grafbase_subgraph" "users_dev" {
+  branch_id = grafbase_branch.develop.id
+  name      = "users"
+  url       = "https://users-dev.api.example.com/graphql"
+}
+```
+
+#### Argument Reference
+
+The following arguments are supported:
+
+- `branch_id` (Required, String) - The ID of the branch where the subgraph will be created. Changing this attribute forces replacement of the resource.
+
+- `name` (Required, String) - The name of the subgraph. Must be unique within the branch and follow naming conventions. Changing this attribute forces replacement of the resource.
+
+- `url` (Required, String) - The URL endpoint where the subgraph's GraphQL schema is served. This URL must be accessible to Grafbase and serve a valid GraphQL schema. This attribute can be updated without replacing the resource.
+
+#### Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+- `id` (String) - The unique identifier of the subgraph assigned by Grafbase.
+- `created_at` (String) - The RFC3339 timestamp when the subgraph was created.
+
+#### Import
+
+Existing subgraphs can be imported using the format `branch_id/subgraph_name`:
+
+```bash
+terraform import grafbase_subgraph.users abcd1234-5678-90ef-ghij-klmnopqrstuv/users
+```
+
+#### Notes
+
+- **URL Updates**: The `url` attribute can be updated to point to a different endpoint without recreating the subgraph.
+- **Immutability**: Both `branch_id` and `name` are immutable after creation. Changing either will destroy and recreate the subgraph.
+- **Uniqueness**: Subgraph names must be unique within a branch, but can be reused across different branches.
+- **Dependencies**: A branch must exist before creating subgraphs.
+- **Schema Validation**: The URL must serve a valid GraphQL schema that Grafbase can introspect.
+
 ## Examples
 
 Explore the `examples/` directory for complete usage examples:
 
-- [`examples/main.tf`](examples/main.tf) - Basic usage with variables
-- [`examples/complete/`](examples/complete/) - Advanced multi-graph setup
+- [`examples/main.tf`](examples/main.tf) - Basic graph creation with variables
+- [`examples/federated-graph/`](examples/federated-graph/) - Complete federated graph with branches and subgraphs
+- [`examples/complete/`](examples/complete/) - Advanced multi-graph setup with federation
 - [`examples/dev-setup/`](examples/dev-setup/) - Local development configuration
+
+### Quick Example: Federated Graph
+
+Here's a complete example showing how to create a federated GraphQL API:
+
+```hcl
+# Create a graph
+resource "grafbase_graph" "api" {
+  account_slug = "my-account"
+  slug         = "my-api"
+}
+
+# Create main branch
+resource "grafbase_branch" "main" {
+  graph_id = grafbase_graph.api.id
+  name     = "main"
+}
+
+# Add subgraphs to compose the federated API
+resource "grafbase_subgraph" "users" {
+  branch_id = grafbase_branch.main.id
+  name      = "users"
+  url       = "https://users.api.example.com/graphql"
+}
+
+resource "grafbase_subgraph" "products" {
+  branch_id = grafbase_branch.main.id
+  name      = "products"
+  url       = "https://products.api.example.com/graphql"
+}
+
+resource "grafbase_subgraph" "orders" {
+  branch_id = grafbase_branch.main.id
+  name      = "orders"
+  url       = "https://orders.api.example.com/graphql"
+}
+```
 
 ## Development
 

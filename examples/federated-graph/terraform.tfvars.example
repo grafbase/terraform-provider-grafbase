@@ -1,0 +1,9 @@
+# Grafbase API key for authentication
+# You can get this from the Grafbase dashboard
+grafbase_api_key = "your-grafbase-api-key-here"
+
+# Your Grafbase account slug
+account_slug = "your-account-slug"
+
+# The slug for your graph
+graph_slug = "my-federated-graph"
