@@ -83,6 +83,7 @@ func (p *GrafbaseProvider) Configure(ctx context.Context, req provider.Configure
 func (p *GrafbaseProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewGraphResource,
+		NewBranchResource,
 	}
 }
 
