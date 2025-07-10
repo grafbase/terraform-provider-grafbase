@@ -111,10 +111,10 @@ output "development_branches" {
 output "feature_test_branch" {
   description = "Feature test branch information"
   value = {
-    id                               = grafbase_branch.feature_test.id
-    name                             = grafbase_branch.feature_test.name
-    environment                      = grafbase_branch.feature_test.environment
-    operation_checks_enabled         = grafbase_branch.feature_test.operation_checks_enabled
+    id                                 = grafbase_branch.feature_test.id
+    name                               = grafbase_branch.feature_test.name
+    environment                        = grafbase_branch.feature_test.environment
+    operation_checks_enabled           = grafbase_branch.feature_test.operation_checks_enabled
     operation_checks_ignore_usage_data = grafbase_branch.feature_test.operation_checks_ignore_usage_data
   }
 }

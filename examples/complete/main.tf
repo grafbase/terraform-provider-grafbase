@@ -124,9 +124,9 @@ output "dev_branches" {
 output "api_staging_branch" {
   description = "API staging branch details"
   value = {
-    id                      = grafbase_branch.api_staging.id
-    name                    = grafbase_branch.api_staging.name
-    environment             = grafbase_branch.api_staging.environment
+    id                       = grafbase_branch.api_staging.id
+    name                     = grafbase_branch.api_staging.name
+    environment              = grafbase_branch.api_staging.environment
     operation_checks_enabled = grafbase_branch.api_staging.operation_checks_enabled
   }
 }
