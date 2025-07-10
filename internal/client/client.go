@@ -118,6 +118,38 @@ type Account struct {
 	Name string `json:"name"`
 }
 
+// Branch represents a Grafbase branch
+type Branch struct {
+	ID                             string            `json:"id"`
+	Name                           string            `json:"name"`
+	Environment                    BranchEnvironment `json:"environment"`
+	OperationChecksEnabled         bool              `json:"operationChecksEnabled"`
+	OperationChecksIgnoreUsageData bool              `json:"operationChecksIgnoreUsageData"`
+	Graph                          Graph             `json:"graph"`
+}
+
+// BranchEnvironment represents the environment type of a branch
+type BranchEnvironment string
+
+const (
+	BranchEnvironmentPreview    BranchEnvironment = "PREVIEW"
+	BranchEnvironmentProduction BranchEnvironment = "PRODUCTION"
+)
+
+// CreateBranchInput represents the input for creating a branch
+type CreateBranchInput struct {
+	AccountSlug string `json:"accountSlug"`
+	GraphSlug   string `json:"graphSlug"`
+	BranchName  string `json:"branchName"`
+}
+
+// DeleteBranchInput represents the input for deleting a branch
+type DeleteBranchInput struct {
+	AccountSlug string
+	GraphSlug   string
+	BranchName  string
+}
+
 // CreateGraphInput represents the input for creating a graph
 type CreateGraphInput struct {
 	AccountID string `json:"accountId"`
@@ -382,4 +414,180 @@ func (c *Client) DeleteGraph(ctx context.Context, id string) error {
 	}
 
 	return fmt.Errorf("graph deletion failed: %v", errorResp)
+}
+
+// CreateBranch creates a new branch
+func (c *Client) CreateBranch(ctx context.Context, input CreateBranchInput) (*Branch, error) {
+	query := `
+		mutation CreateBranch($input: BranchCreateInput!) {
+			branchCreate(input: $input) {
+				... on Query {
+					branch(accountSlug: $accountSlug, graphSlug: $graphSlug, branchName: $branchName) {
+						id
+						name
+						environment
+						operationChecksEnabled
+						operationChecksIgnoreUsageData
+						graph {
+							id
+							slug
+						}
+					}
+				}
+				... on BranchAlreadyExistsError {
+					__typename
+				}
+				... on GraphDoesNotExistError {
+					__typename
+				}
+				... on GraphNotSelfHostedError {
+					__typename
+				}
+			}
+		}
+	`
+
+	variables := map[string]interface{}{
+		"input":       input,
+		"accountSlug": input.AccountSlug,
+		"graphSlug":   input.GraphSlug,
+		"branchName":  input.BranchName,
+	}
+
+	resp, err := c.ExecuteQuery(ctx, query, variables)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create branch: %w", err)
+	}
+
+	var result struct {
+		BranchCreate json.RawMessage `json:"branchCreate"`
+	}
+
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal create response: %w", err)
+	}
+
+	// Try to parse as Query type (success response)
+	var successResp struct {
+		Branch Branch `json:"branch"`
+	}
+	if err := json.Unmarshal(result.BranchCreate, &successResp); err == nil && successResp.Branch.ID != "" {
+		return &successResp.Branch, nil
+	}
+
+	// If not a success response, it's an error
+	var errorResp map[string]interface{}
+	if err := json.Unmarshal(result.BranchCreate, &errorResp); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	if errorResp["__typename"] == "BranchAlreadyExistsError" {
+		return nil, fmt.Errorf("branch already exists")
+	} else if errorResp["__typename"] == "GraphDoesNotExistError" {
+		return nil, fmt.Errorf("graph does not exist")
+	} else if errorResp["__typename"] == "GraphNotSelfHostedError" {
+		return nil, fmt.Errorf("graph is not self-hosted")
+	}
+
+	return nil, fmt.Errorf("branch creation failed: %v", errorResp)
+}
+
+// GetBranch retrieves a branch by account slug, graph slug, and branch name
+func (c *Client) GetBranch(ctx context.Context, accountSlug, graphSlug, branchName string) (*Branch, error) {
+	query := `
+		query GetBranch($accountSlug: String!, $graphSlug: String!, $branchName: String!) {
+			branch(accountSlug: $accountSlug, graphSlug: $graphSlug, branchName: $branchName) {
+				id
+				name
+				environment
+				operationChecksEnabled
+				operationChecksIgnoreUsageData
+				graph {
+					id
+					slug
+				}
+			}
+		}
+	`
+
+	variables := map[string]interface{}{
+		"accountSlug": accountSlug,
+		"graphSlug":   graphSlug,
+		"branchName":  branchName,
+	}
+
+	resp, err := c.ExecuteQuery(ctx, query, variables)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get branch: %w", err)
+	}
+
+	var result struct {
+		Branch *Branch `json:"branch"`
+	}
+
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal get response: %w", err)
+	}
+
+	if result.Branch == nil {
+		return nil, fmt.Errorf("branch not found")
+	}
+
+	return result.Branch, nil
+}
+
+// DeleteBranch deletes a branch
+func (c *Client) DeleteBranch(ctx context.Context, input DeleteBranchInput) error {
+	query := `
+		mutation DeleteBranch($accountSlug: String!, $graphSlug: String!, $branchName: String!) {
+			branchDelete(accountSlug: $accountSlug, graphSlug: $graphSlug, branchName: $branchName) {
+				... on Query {
+					__typename
+				}
+				... on BranchDoesNotExistError {
+					__typename
+				}
+				... on CannotDeleteProductionBranchError {
+					__typename
+				}
+			}
+		}
+	`
+
+	variables := map[string]interface{}{
+		"accountSlug": input.AccountSlug,
+		"graphSlug":   input.GraphSlug,
+		"branchName":  input.BranchName,
+	}
+
+	resp, err := c.ExecuteQuery(ctx, query, variables)
+	if err != nil {
+		return fmt.Errorf("failed to delete branch: %w", err)
+	}
+
+	var result struct {
+		BranchDelete json.RawMessage `json:"branchDelete"`
+	}
+
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		return fmt.Errorf("failed to unmarshal delete response: %w", err)
+	}
+
+	// Parse the response to check for errors
+	var deleteResp map[string]interface{}
+	if err := json.Unmarshal(result.BranchDelete, &deleteResp); err != nil {
+		return fmt.Errorf("failed to parse delete response: %w", err)
+	}
+
+	typename := deleteResp["__typename"].(string)
+	if typename == "Query" {
+		// Success
+		return nil
+	} else if typename == "BranchDoesNotExistError" {
+		return fmt.Errorf("branch does not exist")
+	} else if typename == "CannotDeleteProductionBranchError" {
+		return fmt.Errorf("cannot delete production branch")
+	}
+
+	return fmt.Errorf("branch deletion failed: %v", deleteResp)
 }

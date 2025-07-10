@@ -186,6 +186,90 @@ terraform import grafbase_graph.my_graph my-account/my-graph
 - **Naming**: Follow Grafbase naming conventions for slugs (lowercase, alphanumeric, hyphens allowed).
 - **Permissions**: You must have appropriate permissions in the specified account to create graphs.
 
+### `grafbase_branch`
+
+The `grafbase_branch` resource allows you to manage branches within a graph. Branches enable you to have different environments and configurations for your GraphQL API.
+
+#### Example Usage
+
+**Basic Usage:**
+```hcl
+resource "grafbase_graph" "example" {
+  account_slug = "my-account"
+  slug         = "my-graph"
+}
+
+resource "grafbase_branch" "main" {
+  account_slug = grafbase_graph.example.account_slug
+  graph_slug   = grafbase_graph.example.slug
+  name         = "main"
+}
+```
+
+**Multiple Branches:**
+```hcl
+resource "grafbase_graph" "app" {
+  account_slug = "my-account"
+  slug         = "my-app"
+}
+
+resource "grafbase_branch" "main" {
+  account_slug = grafbase_graph.app.account_slug
+  graph_slug   = grafbase_graph.app.slug
+  name         = "main"
+}
+
+resource "grafbase_branch" "staging" {
+  account_slug = grafbase_graph.app.account_slug
+  graph_slug   = grafbase_graph.app.slug
+  name         = "staging"
+}
+
+resource "grafbase_branch" "feature" {
+  account_slug = grafbase_graph.app.account_slug
+  graph_slug   = grafbase_graph.app.slug
+  name         = "feature-new-schema"
+}
+```
+
+#### Argument Reference
+
+The following arguments are supported:
+
+- `account_slug` (Required, String) - The slug of the Grafbase account where the branch's graph exists. Changing this attribute forces replacement of the resource.
+
+- `graph_slug` (Required, String) - The slug of the graph where this branch will be created. Changing this attribute forces replacement of the resource.
+
+- `name` (Required, String) - The name of the branch. Must be unique within the graph and follow Grafbase naming conventions. Changing this attribute forces replacement of the resource.
+
+#### Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+- `id` (String) - The unique identifier of the branch assigned by Grafbase.
+- `environment` (String) - The environment type of the branch (either `PREVIEW` or `PRODUCTION`).
+- `operation_checks_enabled` (Boolean) - Whether operation checks are enabled for this branch.
+- `operation_checks_ignore_usage_data` (Boolean) - Whether usage data should be ignored when running operation checks.
+
+#### Import
+
+Existing branches can be imported using the format `account_slug/graph_slug/branch_name`:
+
+```bash
+# Import a specific branch
+terraform import grafbase_branch.main my-account/my-graph/main
+
+# Import a feature branch
+terraform import grafbase_branch.feature my-account/my-graph/feature-auth
+```
+
+#### Notes
+
+- **Immutability**: All input attributes (`account_slug`, `graph_slug`, and `name`) are immutable after creation. Changing any of them will destroy and recreate the branch.
+- **Production Branch**: The production branch (typically named "main") cannot be deleted. Attempting to delete it will result in an error.
+- **Branch Names**: Branch names must be unique within a graph and follow Grafbase naming conventions.
+- **Dependencies**: The graph must exist before creating branches. Use Terraform dependencies to ensure proper ordering.
+
 ## Examples
 
 Explore the `examples/` directory for complete usage examples:

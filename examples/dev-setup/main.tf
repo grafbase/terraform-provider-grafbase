@@ -42,6 +42,32 @@ resource "grafbase_graph" "feature_branch" {
   slug         = "feature-${var.developer_name}-test"
 }
 
+# Development branches
+resource "grafbase_branch" "dev_main" {
+  account_slug = grafbase_graph.local_dev.account_slug
+  graph_slug   = grafbase_graph.local_dev.slug
+  name         = "main"
+}
+
+resource "grafbase_branch" "dev_feature" {
+  account_slug = grafbase_graph.local_dev.account_slug
+  graph_slug   = grafbase_graph.local_dev.slug
+  name         = "feature-auth-improvements"
+}
+
+resource "grafbase_branch" "dev_experiment" {
+  account_slug = grafbase_graph.local_dev.account_slug
+  graph_slug   = grafbase_graph.local_dev.slug
+  name         = "experiment-new-schema"
+}
+
+# Feature test branches
+resource "grafbase_branch" "feature_test" {
+  account_slug = grafbase_graph.feature_branch.account_slug
+  graph_slug   = grafbase_graph.feature_branch.slug
+  name         = "test-integration"
+}
+
 # Outputs for local development
 output "local_dev_graph_info" {
   description = "Local development graph information"
@@ -58,6 +84,38 @@ output "feature_branch_graph_info" {
     id         = grafbase_graph.feature_branch.id
     slug       = grafbase_graph.feature_branch.slug
     created_at = grafbase_graph.feature_branch.created_at
+  }
+}
+
+output "development_branches" {
+  description = "All development branches"
+  value = {
+    main = {
+      id          = grafbase_branch.dev_main.id
+      name        = grafbase_branch.dev_main.name
+      environment = grafbase_branch.dev_main.environment
+    }
+    feature = {
+      id          = grafbase_branch.dev_feature.id
+      name        = grafbase_branch.dev_feature.name
+      environment = grafbase_branch.dev_feature.environment
+    }
+    experiment = {
+      id          = grafbase_branch.dev_experiment.id
+      name        = grafbase_branch.dev_experiment.name
+      environment = grafbase_branch.dev_experiment.environment
+    }
+  }
+}
+
+output "feature_test_branch" {
+  description = "Feature test branch information"
+  value = {
+    id                                 = grafbase_branch.feature_test.id
+    name                               = grafbase_branch.feature_test.name
+    environment                        = grafbase_branch.feature_test.environment
+    operation_checks_enabled           = grafbase_branch.feature_test.operation_checks_enabled
+    operation_checks_ignore_usage_data = grafbase_branch.feature_test.operation_checks_ignore_usage_data
   }
 }
 
