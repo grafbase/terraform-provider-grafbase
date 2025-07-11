@@ -145,9 +145,9 @@ type CreateBranchInput struct {
 
 // DeleteBranchInput represents the input for deleting a branch
 type DeleteBranchInput struct {
-	AccountSlug string
-	GraphSlug   string
-	BranchName  string
+	AccountSlug string `json:"accountSlug"`
+	GraphSlug   string `json:"graphSlug"`
+	BranchName  string `json:"branchName"`
 }
 
 // CreateGraphInput represents the input for creating a graph
@@ -371,10 +371,10 @@ func (c *Client) DeleteGraph(ctx context.Context, id string) error {
 		mutation DeleteGraph($input: GraphDeleteInput!) {
 			graphDelete(input: $input) {
 				... on GraphDeleteSuccess {
-					deletedId
+					query
 				}
 				... on GraphDoesNotExistError {
-					query
+					__typename
 				}
 			}
 		}
@@ -419,10 +419,10 @@ func (c *Client) DeleteGraph(ctx context.Context, id string) error {
 // CreateBranch creates a new branch
 func (c *Client) CreateBranch(ctx context.Context, input CreateBranchInput) (*Branch, error) {
 	query := `
-		mutation CreateBranch($input: BranchCreateInput!) {
+		mutation CreateBranch($input: BranchCreateInput!, $accountSlug: String!, $graphSlug: String!, $branchName: String!) {
 			branchCreate(input: $input) {
 				... on Query {
-					branch(accountSlug: $accountSlug, graphSlug: $graphSlug, branchName: $branchName) {
+					branch(accountSlug: $accountSlug, graphSlug: $graphSlug, name: $branchName) {
 						id
 						name
 						environment
@@ -496,7 +496,7 @@ func (c *Client) CreateBranch(ctx context.Context, input CreateBranchInput) (*Br
 func (c *Client) GetBranch(ctx context.Context, accountSlug, graphSlug, branchName string) (*Branch, error) {
 	query := `
 		query GetBranch($accountSlug: String!, $graphSlug: String!, $branchName: String!) {
-			branch(accountSlug: $accountSlug, graphSlug: $graphSlug, branchName: $branchName) {
+			branch(accountSlug: $accountSlug, graphSlug: $graphSlug, name: $branchName) {
 				id
 				name
 				environment
