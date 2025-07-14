@@ -1,0 +1,56 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+```terraform
+resource "grafbase_graph" "example" {
+  account_slug = "my-account"
+  slug         = "my-graph"
+}
+```
+
+## Creating a Graph with Branches
+
+```terraform
+resource "grafbase_graph" "example" {
+  account_slug = "my-account"
+  slug         = "my-graph"
+}
+
+resource "grafbase_branch" "main" {
+  account_slug = grafbase_graph.example.account_slug
+  graph_slug   = grafbase_graph.example.slug
+  name         = "main"
+}
+
+resource "grafbase_branch" "staging" {
+  account_slug = grafbase_graph.example.account_slug
+  graph_slug   = grafbase_graph.example.slug
+  name         = "staging"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Graphs can be imported using the account slug and graph slug separated by a forward slash:
+
+```
+terraform import grafbase_graph.example account_slug/graph_slug
+```
+
+For example:
+
+```
+terraform import grafbase_graph.example my-account/my-graph
+```

@@ -1,0 +1,43 @@
+name: Documentation
+
+on:
+  pull_request:
+    paths:
+      - 'internal/provider/**'
+      - 'templates/**'
+      - 'examples/**'
+      - '.github/workflows/docs.yaml'
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-go@v5.0.2
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.5.7"
+          terraform_wrapper: false
+      - name: Generate documentation
+        run: |
+          go mod download
+          go generate ./...
+      - name: Check for documentation changes
+        run: |
+          if ! git diff --exit-code docs/; then
+            echo "Documentation is out of date. Please run 'make docs' and commit the changes."
+            git diff docs/
+            exit 1
+          fi
+      - name: Validate documentation
+        run: |
+          go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs validate

@@ -1,0 +1,71 @@
+---
+page_title: "Grafbase Provider"
+description: |-
+  The Grafbase provider allows you to manage Grafbase resources such as graphs and branches.
+---
+
+# Grafbase Provider
+
+The Grafbase provider allows you to manage Grafbase resources such as graphs and branches through Terraform.
+
+## Example Usage
+
+```terraform
+terraform {
+  required_providers {
+    grafbase = {
+      source = "grafbase/grafbase"
+    }
+  }
+}
+
+provider "grafbase" {
+  api_key = var.grafbase_api_key
+}
+
+resource "grafbase_graph" "example" {
+  account_slug = "my-account"
+  slug         = "my-graph"
+}
+
+resource "grafbase_branch" "example" {
+  account_slug = grafbase_graph.example.account_slug
+  graph_slug   = grafbase_graph.example.slug
+  name         = "feature-branch"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Environment Variables
+
+The following environment variables can be used to configure the provider:
+
+- `GRAFBASE_API_KEY` - API key for authentication with Grafbase. This can be used instead of the `api_key` provider argument.
+
+## Authentication
+
+The Grafbase provider requires an API key for authentication. You can obtain an API key from your Grafbase dashboard.
+
+The API key can be provided in one of the following ways:
+
+1. Set the `api_key` argument in the provider configuration
+2. Set the `GRAFBASE_API_KEY` environment variable
+
+```terraform
+provider "grafbase" {
+  api_key = "your-api-key-here"
+}
+```
+
+Or using an environment variable:
+
+```bash
+export GRAFBASE_API_KEY="your-api-key-here"
+```
+
+```terraform
+provider "grafbase" {
+  # api_key will be read from GRAFBASE_API_KEY environment variable
+}
+```
