@@ -1,0 +1,9 @@
+provider_name: "grafbase"
+rendered_provider_name: "Grafbase"
+rendered_website_dir: "docs"
+examples_dir: "examples"
+exclude_deprecated: true
+exclude_beta: false
+website_source_dir: "templates"
+website_temp_dir: ".tfplugindocs"
+tf_version: "1.5"

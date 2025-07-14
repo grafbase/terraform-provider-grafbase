@@ -25,6 +25,10 @@ jobs:
         with:
           terraform_version: "1.5.7"
           terraform_wrapper: false
+      - name: Generate documentation
+        run: |
+          go mod download
+          go generate ./...
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6.3.0
         id: import_gpg

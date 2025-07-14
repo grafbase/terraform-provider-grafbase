@@ -1,0 +1,68 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+```terraform
+resource "grafbase_graph" "example" {
+  account_slug = "my-account"
+  slug         = "my-graph"
+}
+
+resource "grafbase_branch" "example" {
+  account_slug = grafbase_graph.example.account_slug
+  graph_slug   = grafbase_graph.example.slug
+  name         = "feature-branch"
+}
+```
+
+## Multiple Branches
+
+```terraform
+resource "grafbase_graph" "example" {
+  account_slug = "my-account"
+  slug         = "my-graph"
+}
+
+resource "grafbase_branch" "main" {
+  account_slug = grafbase_graph.example.account_slug
+  graph_slug   = grafbase_graph.example.slug
+  name         = "main"
+}
+
+resource "grafbase_branch" "staging" {
+  account_slug = grafbase_graph.example.account_slug
+  graph_slug   = grafbase_graph.example.slug
+  name         = "staging"
+}
+
+resource "grafbase_branch" "feature" {
+  account_slug = grafbase_graph.example.account_slug
+  graph_slug   = grafbase_graph.example.slug
+  name         = "feature-branch"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Branches can be imported using the account slug, graph slug, and branch name separated by forward slashes:
+
+```
+terraform import grafbase_branch.example account_slug/graph_slug/branch_name
+```
+
+For example:
+
+```
+terraform import grafbase_branch.example my-account/my-graph/feature-branch
+```

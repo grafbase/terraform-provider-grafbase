@@ -331,6 +331,26 @@ make dev-setup  # Setup development environment
 make debug      # Run provider in debug mode
 ```
 
+### Documentation
+
+The provider documentation is automatically generated from the code using `tfplugindocs`:
+
+```bash
+make docs       # Generate documentation from code
+```
+
+The documentation is generated from:
+- Provider and resource schemas defined in the Go code
+- Template files in the `templates/` directory
+- Example configurations in the `examples/` directory
+
+Documentation files are created in the `docs/` directory and are automatically included in releases for publication to the Terraform Registry.
+
+To validate documentation:
+```bash
+go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs validate
+```
+
 ### Testing
 
 #### Unit Tests
